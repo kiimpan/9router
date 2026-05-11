@@ -55,7 +55,19 @@ const appendCodexReviewModels = (models) => models.flatMap((model) => {
   ];
 });
 
-const parseCodexModels = (data) => appendCodexReviewModels(parseOpenAIStyleModels(data));
+// patches/05-remove-broken-codex-imagegen.sh — drop unusable cx/gpt-image-2.
+// Codex's upstream model list includes gpt-image-2 but it returns HTTP 400
+// for ChatGPT-account users ("not supported when using Codex with a ChatGPT
+// account"). Users with a direct OpenAI API key should use openai/gpt-image-2
+// instead (added by patch 06). Working Codex image models (gpt-5.X-image)
+// come from open-sse/config/providerModels.js and bypass this filter.
+const isUnsupportedCodexImageModel = (model) => {
+  const id = String(model?.id || model?.slug || model?.model || model?.name || "").toLowerCase();
+  return id === "gpt-image-2" || id.startsWith("gpt-image-2-");
+};
+const parseCodexModels = (data) => appendCodexReviewModels(
+  parseOpenAIStyleModels(data).filter((model) => !isUnsupportedCodexImageModel(model))
+);
 
 const createOpenAIModelsConfig = (url) => ({
   url,

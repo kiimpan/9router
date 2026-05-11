@@ -16,6 +16,8 @@ Located in `patches/`. Each script is idempotent (safe to re-run). Patches add a
 | 02 | `02-fix-voyage-encoding.sh` | Voyage AI embeddings 400: `encoding_format 'float' not valid -- accepted values are 'base64'` | `open-sse/handlers/embeddingsCore.js`, `open-sse/handlers/embeddingProviders/openai.js` |
 | 03 | `03-fix-gemini-embedding.sh` | Gemini embeddings 404 on `v1beta` for GA models | `open-sse/handlers/embeddingProviders/gemini.js` |
 | 04 | `04-fix-nanobanana-baseurl.sh` | Stale `/v1/chat/completions` baseUrl in nanobanana provider config (causes 404 if any fallback path hits it) | `open-sse/config/providers.js` |
+| 05 | `05-remove-broken-codex-imagegen.sh` | `cx/gpt-image-2` always returns 400 for ChatGPT-account users — Codex's upstream model list exposes the model but rejects every call | `src/app/api/providers/[id]/models/route.js` |
+| 06 | `06-add-gpt-image-2-to-openai.sh` | Adds `gpt-image-2` (OpenAI Apr 2026) to OpenAI provider's image catalog so users with a direct OpenAI API key can select it from the admin dashboard | `open-sse/config/providerModels.js` |
 
 ## Apply patches
 
@@ -78,6 +80,7 @@ The OpenAI-platform error message is a tell — the connection's credential is *
 
 - `gemini/*-image` returning 429 → Gemini free-tier quota exhausted. Add billing or use a different image provider.
 - `cx/gpt-5.*-image` returning "not supported when using Codex with a ChatGPT account" → ChatGPT accounts need Plus/Pro tier with image-gen entitlement.
+- `gpt-image-2` access: not available via Codex/ChatGPT accounts (now filtered by patch 05). Use `openai/gpt-image-2` instead — add an OpenAI API key connection in admin, then select `openai/gpt-image-2` (added by patch 06). Uses standard `POST /v1/images/generations` endpoint.
 
 ## License
 
