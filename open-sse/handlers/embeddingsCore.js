@@ -42,7 +42,8 @@ export async function handleEmbeddingsCore({
   const headers = adapter.buildHeaders(credentials, ctx);
   const requestBody = adapter.buildBody(model, {
     input,
-    encoding_format: body.encoding_format || "float",
+    // patches/02-fix-voyage-encoding.sh — Voyage AI only accepts 'base64'
+    encoding_format: body.encoding_format || (provider === "voyage-ai" ? "base64" : "float"),
     dimensions: body.dimensions,
   });
 

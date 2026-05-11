@@ -178,9 +178,18 @@ export function getProviderByAlias(alias) {
 }
 
 // Helper: Get provider ID from alias
+// patches/01-fix-tavily-routing.sh — strip /search /fetch suffix before alias lookup
 export function resolveProviderId(aliasOrId) {
-  const provider = getProviderByAlias(aliasOrId);
-  return provider?.id || aliasOrId;
+  // 9router catalog (/v1/models/web) returns IDs like "tavily/search", "exa/fetch".
+  // Routing handlers however expect bare provider IDs. Strip the suffix so both
+  // long-form catalog IDs and bare provider names route correctly.
+  let id = aliasOrId;
+  if (typeof id === "string") {
+    const m = id.match(/^([^/]+)\/(search|fetch)$/);
+    if (m) id = m[1];
+  }
+  const provider = getProviderByAlias(id);
+  return provider?.id || id;
 }
 
 // Helper: Get alias from provider ID

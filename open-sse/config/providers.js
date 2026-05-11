@@ -312,7 +312,11 @@ export const PROVIDERS = {
     format: "openai"
   },
   nanobanana: {
-    baseUrl: "https://api.nanobananaapi.ai/v1/chat/completions",
+    // patches/04-fix-nanobanana-baseurl.sh — nanobanana is image-only.
+    // The previous baseUrl pointed at a non-existent /v1/chat/completions
+    // path which returned 404 when any fallback code accidentally hit it.
+    // The real image endpoint lives in open-sse/handlers/imageProviders/nanobanana.js.
+    baseUrl: "https://api.nanobananaapi.ai/api/v1/nanobanana/generate",
     format: "openai"
   },
   chutes: {

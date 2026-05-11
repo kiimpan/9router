@@ -34,6 +34,21 @@ export default function createOpenAIEmbeddingAdapter(providerId) {
       }
       return body;
     },
-    normalize: (responseBody) => responseBody,
+    // patches/02-fix-voyage-encoding.sh — decode base64 embeddings from Voyage back to float[]
+    normalize: (responseBody) => {
+      if (!responseBody || !Array.isArray(responseBody.data)) return responseBody;
+      const needsDecode = responseBody.data.some(
+        (d) => d && typeof d.embedding === "string"
+      );
+      if (!needsDecode) return responseBody;
+      const decoded = responseBody.data.map((d) => {
+        if (!d || typeof d.embedding !== "string") return d;
+        // base64 → Float32Array → plain array
+        const bin = Buffer.from(d.embedding, "base64");
+        const f32 = new Float32Array(bin.buffer, bin.byteOffset, bin.byteLength / 4);
+        return { ...d, embedding: Array.from(f32) };
+      });
+      return { ...responseBody, data: decoded };
+    },
   };
 }
